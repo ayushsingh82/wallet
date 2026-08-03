@@ -10,7 +10,6 @@ import {
     Network,
     getNetworkArg,
     SPLICE_SPEC_PATH,
-    success,
     SUPPORTED_VERSIONS,
     setSpliceHash,
     hasFlag,
@@ -209,14 +208,7 @@ async function main(network: Network = 'devnet') {
             SUPPORTED_VERSIONS[network].splice.version,
             SUPPORTED_VERSIONS[network].canton.version.split('-')[0]
         ).map(generateOpenApiClient)
-    ).then(async () => {
-        // Generate the Express server stub for the token-standard registry APIs
-        // from the same specs the clients above were generated from.
-        await generateRegistryServerStub(network)
-        console.log(
-            success('Generated fresh TypeScript clients for all OpenAPI specs')
-        )
-    })
+    )
 }
 
 main(getNetworkArg())
