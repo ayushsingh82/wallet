@@ -516,7 +516,7 @@ jobs:
 
             - name: Rebuild DAML-dependent packages
               run: |
-                  yarn workspace @canton-network/core-test-token build
+                  yarn workspace @canton-network/core-splice-codegen build
 
             - uses: ./.github/actions/check_resources
 

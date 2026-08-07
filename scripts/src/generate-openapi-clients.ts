@@ -20,7 +20,6 @@ import * as path from 'path'
 import crypto from 'crypto'
 import { generateLedgerProviderTypes } from './lib/ledger-provider-type-generator.js'
 import jsYaml from 'js-yaml'
-import { generateRegistryServerStub } from './lib/generate-registry-server.js'
 
 /**
  * OpenAPI specification details.
