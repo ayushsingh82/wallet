@@ -1,105 +1,165 @@
-# @canton-network/core-test-token
+# @canton-network/core-splice-codegen
 
-TypeScript wrapper package for the Test Token DAML codegen.
+Typed wrappers around generated DAML JS packages used by Splice examples and SDK integrations.
+
+This package currently exposes two modules:
+
+- `TestToken` (from `@daml.js/test-token-v1`)
+- `OTCTrade` (from `@daml.js/otc-trade`)
+
+## Installation
+
+```sh
+yarn add @canton-network/core-splice-codegen
+```
 
 ## Exports
 
-From [src/index.ts](src/index.ts):
+Top-level exports (from `src/index.ts`):
 
-- `TestTokenV1`: shortcut to `Splice.Testing.Tokens.TestTokenV1`
-- `packageId`: re-export from `@daml.js/test-token-v1`
-- `commands`: command builders for Test Token templates and choices
+- `TestToken`
+- `OTCTrade`
+
+Each module has the same shape:
+
+- `DAR`: typed template references, package ID, and selected type exports
+- `commands`: typed create/exercise command builders
+- `utils`: helper utilities (currently `vetDar`)
 
 ## Build
 
-From the repo root:
+From repository root:
 
 ```sh
-yarn workspace @canton-network/core-test-token build
+yarn workspace @canton-network/core-splice-codegen build
 ```
 
-The build produces:
+Build outputs:
 
 - ESM: `dist/index.js`
 - CJS: `dist/index.cjs`
 - Browser ESM: `dist/index.browser.js`
 - Types: `dist/index.d.ts`
 
-## Regenerating DAML Codegen Inputs
-
-This package depends on generated DAML JS artifacts under
-`damljs/test-token-v1`.
-
-To refresh those artifacts, run:
-
-```sh
-yarn script:generate:test-token
-```
-
-Then rebuild this package.
-
-## Usage
+## Quick Start
 
 ```ts
-import {
-    TestTokenV1,
-    packageId,
-    commands,
-} from '@canton-network/core-test-token'
+import { TestToken, OTCTrade } from '@canton-network/core-splice-codegen'
 
-const template = TestTokenV1
-console.log(packageId)
+// Template references
+console.log(TestToken.DAR.TestTokenV1.TokenRules.templateId)
+console.log(OTCTrade.DAR.TradingApp.OTCTradeProposal.templateId)
 
-// Build a create command for TokenRules
-const createRules = commands.create.rules({ admin: 'Alice::1220...' })
-
-// Build an exercise command for TokenTransferOffer.Accept
-const acceptTransfer = commands.exercise.transferOffer.accept({
-    contractId: '00a1b2c3d4...',
-    choiceArgument: {},
-})
-```
-
-## Command Helpers
-
-The `commands` export provides typed helpers that return
-`WrappedCommand<'CreateCommand'>` and `WrappedCommand<'ExerciseCommand'>`.
-
-Available builders:
-
-- `commands.create.transferOffer`
-- `commands.create.allocation`
-- `commands.create.rules`
-- `commands.exercise.transferOffer.accept`
-- `commands.exercise.transferOffer.reject`
-- `commands.exercise.transferOffer.withdraw`
-- `commands.exercise.transferOffer.update`
-- `commands.exercise.allocation.executeTransfer`
-- `commands.exercise.allocation.cancel`
-- `commands.exercise.allocation.withdraw`
-- `commands.exercise.rules.transfer.transfer`
-- `commands.exercise.rules.transfer.publicFetch`
-- `commands.exercise.rules.allocation.allocate`
-- `commands.exercise.rules.allocation.publicFetch`
-
-Example:
-
-```ts
-import { commands } from '@canton-network/core-test-token'
-
-const createAllocation = commands.create.allocation({
-    allocation: {
-        // Fill with your AllocationSpecification payload
-    },
+// Typed create command
+const createRules = TestToken.commands.create.rules({
+    admin: 'Alice::1220...',
 })
 
-const executeTransfer = commands.exercise.allocation.executeTransfer({
-    contractId: '00f00d...',
+// Typed exercise command
+const settleTrade = OTCTrade.commands.exercise.otcTrade.settle({
+    contractId: '00abc...',
     choiceArgument: {
-        // Fill with Allocation_ExecuteTransfer choice argument
+        allocationsWithContext: {},
     },
 })
 ```
+
+## TestToken Module
+
+`TestToken.DAR` includes:
+
+- `packageId`
+- `TestTokenV1`
+- `TestTokenID`
+- Types: `Token`, `TokenAllocation`, `TokenRules`, `TokenTransferOffer`
+
+`TestToken.commands.create`:
+
+- `transferOffer`
+- `allocation`
+- `rules`
+- `token`
+
+`TestToken.commands.exercise.transferOffer`:
+
+- `accept`
+- `reject`
+- `withdraw`
+- `update`
+
+`TestToken.commands.exercise.allocation`:
+
+- `executeTransfer`
+- `cancel`
+- `withdraw`
+
+`TestToken.commands.exercise.rules.transfer`:
+
+- `transfer`
+- `publicFetch`
+
+`TestToken.commands.exercise.rules.allocation`:
+
+- `allocate`
+- `publicFetch`
+
+`TestToken.utils`:
+
+- `vetDar(sdk, synchronizerId?)`
+
+## OTCTrade Module
+
+`OTCTrade.DAR` includes:
+
+- `packageId`
+- `TradingApp`
+- Types: `OTCTrade`, `OTCTradeProposal`
+
+`OTCTrade.commands.create`:
+
+- `otcTrade`
+- `otcTradeProposal`
+
+`OTCTrade.commands.exercise.otcTrade`:
+
+- `settle`
+- `cancel`
+
+`OTCTrade.commands.exercise.otcTradeProposal`:
+
+- `accept`
+- `reject`
+- `initiateSettlement`
+
+`OTCTrade.utils`:
+
+- `vetDar(sdk, synchronizerId?)`
+
+## DAR Vetting Utility
+
+Both modules expose `utils.vetDar`, which loads a local DAR file and uploads it through the SDK:
+
+```ts
+import { TestToken } from '@canton-network/core-splice-codegen'
+
+await TestToken.utils.vetDar(sdk)
+await TestToken.utils.vetDar(sdk, 'global-synchronizer-id')
+```
+
+Notes:
+
+- `vetDar` expects local DAR files to exist under `.localnet/dars/`.
+- If those files are absent, DAR upload will fail at runtime.
+
+## Relationship To Token Standard
+
+`TestToken` command helpers are wired to choice names from `@canton-network/core-token-standard`:
+
+- transfer-instruction choices
+- allocation choices
+- transfer/allocation factory choices
+
+This keeps command generation aligned with Token Standard API semantics while staying strongly typed against DAML templates.
 
 ## License
 
