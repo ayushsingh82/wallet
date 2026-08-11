@@ -512,7 +512,7 @@ jobs:
                   key: dpm-${{ runner.os }}-${{ needs.version-config.outputs.daml_release_version }}
 
             - name: Generate featured DARs
-              run: yarn script:generate:featured-dars
+              run: yarn generate:codegen
 
             - name: Rebuild DAML-dependent packages
               run: |
